@@ -1,0 +1,6 @@
+version: '2'
+services:
+  central-directory:
+    build: .
+    environment:
+     CDIR_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_directory"

@@ -1,0 +1,10 @@
+version: '2'
+services:
+  central-directory:
+    build:
+      context: .
+    environment:
+     CDIR_ADMIN_KEY: "admin"
+     CDIR_ADMIN_SECRET: "admin"
+     CDIR_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_directory_functional"
+     CDIR_DEFAULT_DFSP: "dfspA"

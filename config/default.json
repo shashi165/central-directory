@@ -1,0 +1,25 @@
+{
+  "PORT": 3000,
+  "HOSTNAME": "http://central-directory",
+  "END_USER_REGISTRY_URL": "http://central-end-user-registry-test-1765383584.us-west-2.elb.amazonaws.com",
+  "SCHEME_ID": "001",
+  "DEFAULT_DFSP": "",
+  "ENABLE_TOKEN_AUTH": false,
+  "PATHFINDER": {
+    "PARTNER_ID": 10305,
+    "SERVICE": "E2U+mm",
+    "CACHE_TIME": 300000,
+    "REGEX": {
+      "PATTERN": "^.*$",
+      "REPLACE": "mm:#{identifier}@leveloneproject.org"
+    },
+    "QUERY": {
+      "ADDRESS": "localhost",
+      "PORT": 15353,
+      "TIMEOUT": 15000
+    },
+    "PROVISIONING": {
+      "ADDRESS": "http://localhost:8080/nrs-pi/services/SIPIX/SendRequest"
+    }
+  }
+}
