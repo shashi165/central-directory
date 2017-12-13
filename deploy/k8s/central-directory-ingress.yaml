@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: central-directory
+  labels:
+      app: central-directory
+spec:
+  rules:
+    - host: central-directory.local
+      http:
+        paths:
+        - backend:
+            serviceName: central-directory
+            servicePort: 3000

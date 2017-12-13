@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: central-directory
+  labels:
+    app: central-directory
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http-api
+      protocol: TCP
+  selector:
+    app: central-directory

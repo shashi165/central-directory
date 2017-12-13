@@ -1,0 +1,43 @@
+---
+ apiVersion: extensions/v1beta1
+ kind: Deployment
+ metadata:
+    name: central-directory-deployment
+    labels:
+      app: central-directory
+ spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: central-directory
+      spec:
+        containers:
+          - name: central-directory
+            image: mojaloop/central-directory:latest
+            ports:
+              - containerPort: 3000
+            livenessProbe:
+              httpGet:
+                path: /health
+                port: 3000
+              initialDelaySeconds: 60
+              periodSeconds: 10
+            env:
+              - name: CDIR_DATABASE_URI
+                valueFrom:
+                  secretKeyRef:
+                    name: central-directory-secret
+                    key: db.uri
+            volumeMounts:
+            - name: config-volume
+              mountPath: /opt/central-directory/config
+        volumes:
+          - name: config-volume
+            configMap:
+              name: central-directory-config
+              items:
+              - key: default.json
+                path: default.json
+              - key: knexfile.js
+                path: knexfile.js
