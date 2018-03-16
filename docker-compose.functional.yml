@@ -6,5 +6,9 @@ services:
     environment:
      CDIR_ADMIN_KEY: "admin"
      CDIR_ADMIN_SECRET: "admin"
-     CDIR_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_directory_functional"
+     CDIR_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_POST}/${POSTGRES_DB}"
      CDIR_DEFAULT_DFSP: "dfspA"
+     CDIR_END_USER_REGISTRY_URL: "http://end-user-registry"
+     CDIR_SCHEME_ID: "001"
+     CDIR_ENABLE_TOKEN_AUTH: "false"
+     CDIR_TOKEN_EXPIRATION: "3600000"

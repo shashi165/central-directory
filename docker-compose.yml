@@ -1,7 +1,7 @@
 version: '2'
 services:
   central-directory:
-    env_file: .env
+    env_file: test/functional_runner.env
     ports:
      - "3000:3000"
     depends_on:
@@ -9,7 +9,7 @@ services:
     networks:
      - back
   postgres:
-    env_file: .env
+    env_file: test/functional_runner.env
     image: postgres:9.4
     networks:
      - back
