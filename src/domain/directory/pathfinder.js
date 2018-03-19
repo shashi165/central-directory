@@ -20,7 +20,7 @@ const NonPrimaryPreference = 2
 const queryClient = Query.createClient({ address: PFConfig.QUERY.ADDRESS, port: parseInt(PFConfig.QUERY.PORT), timeout: parseInt(PFConfig.QUERY.TIMEOUT) })
 const provisioningClient = Provisioning.createClient({ address: PFConfig.PROVISIONING.ADDRESS })
 
-const dfspResponse = (response, primary = false) => {
+const dfspResponse = (response, primary) => {
   return {
     identifier: response.identifier,
     schemeIdentifier: response.schemeIdentifier,

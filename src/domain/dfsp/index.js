@@ -57,7 +57,7 @@ const getDefaultDfsp = () => {
       })
     } else {
       reject(new InternalError('Error retrieving DFSP.'))
-      return
+      // return
     }
   })
 }

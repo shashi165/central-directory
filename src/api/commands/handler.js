@@ -12,8 +12,11 @@ const buildResponse = (dfsp) => {
   }
 }
 
-exports.create = (request, reply) => {
-  DfspService.create(request.payload.name, request.payload.shortName, request.payload.providerUrl)
-    .then(dfsp => reply(buildResponse(dfsp)).code(201))
-    .catch(e => reply(e))
+exports.create = async function (request, h) {
+  try {
+    const dfsp = await DfspService.create(request.payload.name, request.payload.shortName, request.payload.providerUrl)
+    return h.response(buildResponse(dfsp)).code(201)
+  } catch (e) {
+    throw e
+  }
 }

@@ -10,7 +10,7 @@ module.exports = [
     method: 'GET',
     path: '/identifier-types',
     handler: Handler.identifierTypes,
-    config: {
+    options: {
       tags: tags,
       auth: Auth.strategy(),
       description: 'Available identifier types',

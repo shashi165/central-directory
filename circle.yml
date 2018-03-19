@@ -45,3 +45,4 @@ deployment:
     commands:
       - node deploy/node/index.js
       - aws s3 cp $CIRCLE_ARTIFACTS/coverage/lcov.info s3://$BUCKET/sonar/$APP_NAME/lcov.info
+

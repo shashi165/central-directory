@@ -3,37 +3,42 @@
 const Hapi = require('hapi')
 const Sinon = require('sinon')
 const ErrorHandling = require('@mojaloop/central-services-error-handling')
-const Auth = require('@mojaloop/central-services-auth')
 const DfspStrategy = require('../../../src/api/auth/dfsp')
 const TokenStrategy = require('../../../src/api/auth/token')
 const Encoding = require('@mojaloop/central-services-shared').Encoding
+const Boom = require('boom')
 
 let sandbox
 
-function setup () {
+async function setup () {
   sandbox = Sinon.sandbox.create()
   const fixtures = {
     teardown: () => {
       sandbox.restore()
     }
   }
-
-  const server = new Hapi.Server()
-  server.connection({
+  const server = await new Hapi.Server({
     port: 8000,
     routes: {
-      validate: ErrorHandling.validateRoutes()
+      validate: {
+        options: ErrorHandling.validateRoutes(),
+        failAction: async function (request, h, err) {
+          throw Boom.boomify(err)
+        }
+      }
     }
   })
 
   sandbox.stub(DfspStrategy, 'validate')
   sandbox.stub(TokenStrategy, 'validate')
-  DfspStrategy.validate.yields(null, true, {})
-  TokenStrategy.validate.yields(null, true, {})
+  DfspStrategy.validate.resolves({isValid: true, credentials: {}})
+  TokenStrategy.validate.resolves({isValid: true, credentials: {}})
 
-  server.register([
+  await server.register([
     ErrorHandling,
-    Auth,
+    require('hapi-auth-basic'),
+    require('@now-ims/hapi-now-auth'),
+    require('hapi-auth-bearer-token'),
     require('../../../src/api/auth'),
     require('../../../src/api')
   ])
@@ -47,11 +52,10 @@ let request = ({url, method = 'GET', payload = '', headers = {}}) => {
   return { url: url, method: method, payload: payload, headers: headers }
 }
 
-let assertInvalidQueryParameterError = (test, response, ...messages) => {
+let assertInvalidQueryParameterError = (test, response, messages) => {
   test.equal(response.statusCode, 400)
-  test.equal(response.result.id, 'InvalidQueryParameterError')
-  test.equal(response.result.message, 'Error validating one or more query parameters')
-  test.deepEqual(response.result.validationErrors.map(d => d.message), messages)
+  test.equal(response.result.id, 'BadRequestError')
+  test.equal(response.result.message, messages)
 }
 
 module.exports = {

@@ -12,15 +12,20 @@ const verifyHash = (dfsp, password) => {
   return Crypto.verify(dfsp.secretHash, password)
 }
 
-const validate = (request, name, password, cb) => {
+const validate = async (request, name, password, h) => {
   if (Config.ADMIN_KEY && Config.ADMIN_SECRET && name === Config.ADMIN_KEY && password === Config.ADMIN_SECRET) {
-    return cb(null, true, { name: Config.ADMIN_KEY })
+    return {
+      isValid: true,
+      credentials: { name: Config.ADMIN_KEY }
+    }
   }
 
-  DfspService.getByName(name)
-    .then(dfsp => verifyHash(dfsp, password)
-        .then(verified => cb(null, verified, dfsp))
-    )
+  const dfsp = await DfspService.getByName(name)
+  const verified = await verifyHash(dfsp, password)
+  return {
+    isValid: verified,
+    credentials: dfsp
+  }
 }
 
 module.exports = {

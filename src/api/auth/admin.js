@@ -2,14 +2,21 @@
 
 const Config = require('../../lib/config')
 
-const validate = (request, username, password, callback) => {
+const validate = async (request, username, password, h) => {
   const verified = (Config.ADMIN_KEY && Config.ADMIN_SECRET && username === Config.ADMIN_KEY && password === Config.ADMIN_SECRET)
+  if (!verified) {
+    return {credentials: null, isValid: false}
+  }
+
   const credentials = { name: 'admin' }
-  callback(null, verified, credentials)
+  return {
+    credentials,
+    isValid: verified
+  }
 }
 
 module.exports = {
-  name: 'admin',
+  name: 'simple',
   scheme: 'basic',
   validate
 }

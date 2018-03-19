@@ -125,25 +125,25 @@ Test('directory registry test', registryTest => {
       let a = { identifierType: 'a', description: 'test', find: () => {} }
 
       Registry.register(a)
-      .then(() => assertInvalidDirectoryError(test, a, 'Directory with \'identifierType\' = \'a\' has already been registered'))
+        .then(() => assertInvalidDirectoryError(test, a, 'Directory with \'identifierType\' = \'a\' has already been registered'))
     })
 
     registerTest.test('throw exception if registering same identifierType together', test => {
       let a = { identifierType: 'a', description: 'test', find: () => {} }
 
       Registry.register(a, a)
-      .then(() => {
-        test.fail('Expected InvalidDirectoryError')
-        test.end()
-      })
-      .catch(InvalidDirectoryError, e => {
-        test.equal(e.message, 'Directory with \'identifierType\' = \'a\' has already been registered')
-        test.end()
-      })
-      .catch(e => {
-        test.fail('Expected InvalidDirectoryError')
-        test.end()
-      })
+        .then(() => {
+          test.fail('Expected InvalidDirectoryError')
+          test.end()
+        })
+        .catch(InvalidDirectoryError, e => {
+          test.equal(e.message, 'Directory with \'identifierType\' = \'a\' has already been registered')
+          test.end()
+        })
+        .catch(e => {
+          test.fail('Expected InvalidDirectoryError')
+          test.end()
+        })
     })
 
     registerTest.end()
@@ -210,14 +210,15 @@ Test('directory registry test', registryTest => {
         { identifierType: 'a', description: 'a description', find: () => {} },
         { identifierType: 'b', description: 'b description', find: () => {} },
         { identifierType: 'c', description: 'c description', find: () => {} }
-      ).then(() => Registry.identifierTypes())
-      .then(types => {
-        test.equal(types.length, 3)
-        test.deepEqual(types[0], { identifierType: 'a', description: 'a description' })
-        test.deepEqual(types[1], { identifierType: 'b', description: 'b description' })
-        test.deepEqual(types[2], { identifierType: 'c', description: 'c description' })
-        test.end()
-      })
+      )
+        .then(() => Registry.identifierTypes())
+        .then(types => {
+          test.equal(types.length, 3)
+          test.deepEqual(types[0], { identifierType: 'a', description: 'a description' })
+          test.deepEqual(types[1], { identifierType: 'b', description: 'b description' })
+          test.deepEqual(types[2], { identifierType: 'c', description: 'c description' })
+          test.end()
+        })
     })
     typesTest.end()
   })

@@ -18,21 +18,18 @@ Test('Api module', apiModuleTest => {
   })
 
   apiModuleTest.test('should be named "api"', test => {
-    test.equal(ApiModule.register.attributes.name, 'api')
+    test.equal(ApiModule.plugin.name, 'api')
     test.end()
   })
 
-  apiModuleTest.test('should register routes', test => {
+  apiModuleTest.test('should register routes', async function (test) {
     let server = {
       route: sandbox.stub()
     }
 
-    let next = () => {
-      test.ok(server.route.called)
-      test.end()
-    }
-
-    ApiModule.register(server, {}, next)
+    await ApiModule.plugin.register(server, {})
+    test.ok(server.route.called)
+    test.end()
   })
   apiModuleTest.end()
 })

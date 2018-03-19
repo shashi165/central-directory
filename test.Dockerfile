@@ -13,8 +13,6 @@ RUN chmod +x /opt/central-directory/server.sh && \
 RUN apk add --no-cache make gcc g++ python libtool autoconf automake && \
     apk add -U iproute2 && ln -s /usr/lib/tc /lib/tc && \
     apk add -U iptables && \
-    npm install -g sodium@2.0.3 --unsafe-perm && \
-    npm link argon2 && \
     cd $(npm root -g)/npm && \
     npm install -g node-gyp
 

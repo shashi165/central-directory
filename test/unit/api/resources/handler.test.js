@@ -33,13 +33,47 @@ Test('resource handler', handlerTest => {
   })
 
   handlerTest.test('get should', getTest => {
-    getTest.test('reply with validator error', test => {
+    getTest.test('reply with validator error', async test => {
       let error = new Error('some error')
       Validator.get.returns(P.reject(error))
-
       let request = { query: {} }
-      let reply = (e) => {
-        test.equal(e, error)
+
+      try {
+        await Handler.get(request, {})
+      } catch (err) {
+        test.equal(err, error)
+        test.end()
+      }
+    })
+
+    getTest.test('find identifier in returned directory', test => {
+      let findStub = sandbox.stub()
+      let identifier = '12345'
+      let identifierType = 'eur'
+      let directory = {
+        find: findStub
+      }
+
+      let request = {
+        query: {
+          identifier: `${identifierType}:${identifier}`
+        }
+      }
+
+      Validator.get.returns(P.resolve({
+        directory,
+        identifier,
+        identifierType
+      }))
+
+      let dfsp = { name: 'name', shortName: 'shortName', dfspSchemeIdentifier: '123', url: 'http://test.com/dfsp1', primary: false }
+      let findResult = [{ identifier, schemeIdentifier: schemeId, dfspSchemeIdentifier: dfsp.dfspSchemeIdentifier, primary: false }]
+
+      DfspService.getByDfspSchemeIdentifier.withArgs(dfsp.dfspSchemeIdentifier).returns(P.resolve(dfsp))
+      findStub.withArgs(identifier).yields(null, findResult)
+
+      let reply = (actual) => {
+        test.deepEqual(actual, [{ name: dfsp.name, shortName: dfsp.shortName, primary: false, registered: true, providerUrl: dfsp.url }])
         test.end()
       }
 
@@ -67,7 +101,7 @@ Test('resource handler', handlerTest => {
       }))
 
       let dfsp = { name: 'name', shortName: 'shortName', dfspSchemeIdentifier: '123', url: 'http://test.com/dfsp1', primary: false }
-      let findResult = [{ identifier, schemeIdentifier: schemeId, dfspSchemeIdentifier: dfsp.dfspSchemeIdentifier, primary: false }]
+      let findResult = [{ identifier, schemeIdentifier: schemeId, dfspSchemeIdentifier: dfsp.dfspSchemeIdentifier }]
 
       DfspService.getByDfspSchemeIdentifier.withArgs(dfsp.dfspSchemeIdentifier).returns(P.resolve(dfsp))
       findStub.withArgs(identifier).yields(null, findResult)

@@ -38,7 +38,7 @@ Test('token auth', tokenTest => {
 
   tokenTest.test('name should', nameTest => {
     nameTest.test('be "token"', test => {
-      test.equal(TokenAuth.name, 'token')
+      test.equal(TokenAuth.name, 'bearer')
       test.end()
     })
     nameTest.end()
@@ -46,153 +46,133 @@ Test('token auth', tokenTest => {
 
   tokenTest.test('scheme should', schemeTest => {
     schemeTest.test('be "bearer"', test => {
-      test.equal(TokenAuth.scheme, 'bearer')
+      test.equal(TokenAuth.scheme, 'bearer-access-token')
       test.end()
     })
     schemeTest.end()
   })
 
   tokenTest.test('all token validate should', validateTest => {
-    validateTest.test('be unauthorized if Directory-Api-Key header not set', test => {
+    validateTest.test('be unauthorized if Directory-Api-Key header not set', async test => {
       const request = createRequest()
 
-      const cb = (err) => {
+      try {
+        await TokenAuth.validate(request, 'token')
+      } catch (err) {
         test.ok(err)
         test.ok(err instanceof UnauthorizedError)
         test.equal(err.message, '"Directory-Api-Key" header is required')
         test.end()
       }
-
-      TokenAuth.validate(request, 'token', cb)
     })
 
-    validateTest.test('be unauthorized if Directory-Api-Key not found', test => {
+    validateTest.test('be unauthorized if Directory-Api-Key not found', async test => {
       const name = 'some-name'
       DfspService.getByName.withArgs(name).returns(P.resolve(null))
       const request = createRequest(name)
 
-      const cb = (err) => {
-        test.ok(err)
+      try {
+        await TokenAuth.validate(request, 'token')
+      } catch (err) {
         test.ok(err instanceof UnauthorizedError)
         test.equal(err.message, '"Directory-Api-Key" header is not valid')
         test.end()
       }
-
-      TokenAuth.validate(request, 'token', cb)
     })
 
-    validateTest.test('be invalid if token not found by dfsp', test => {
+    validateTest.test('be invalid if token not found by dfsp', async test => {
       const name = 'some-name'
       const dfspId = 5
       const dfsp = { dfspId }
-
       DfspService.getByName.withArgs(name).returns(P.resolve(dfsp))
       TokenService.byDfsp.withArgs(dfsp).returns(P.resolve([]))
-
       const request = createRequest(name)
 
-      const cb = (err, isValid) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.end()
+      const reply = {
+        response: (response) => {
+          test.equal(response.isValid, false)
+          test.end()
+        }
       }
-
-      TokenAuth.validate(request, 'token', cb)
+      await TokenAuth.validate(request, 'token', reply)
     })
 
-    validateTest.test('be invalid if no dfsp tokens can be verified', test => {
+    validateTest.test('be invalid if no dfsp tokens can be verified', async test => {
       const name = 'some-name'
       const token = 'token'
       const dfspId = 4
       const dfsp = { dfspId }
-
       DfspService.getByName.withArgs(name).returns(P.resolve(dfsp))
-
       const tokens = [
         { token: 'bad-token1' },
         { token: 'bad-token2' }
       ]
-
       Crypto.verify.returns(P.resolve(false))
-
       TokenService.byDfsp.withArgs(dfsp).returns(P.resolve(tokens))
-
       const request = createRequest(name)
 
-      const cb = (err, isValid) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.end()
+      const reply = {
+        response: (response) => {
+          test.equal(response.isValid, false)
+          test.end()
+        }
       }
-
-      TokenAuth.validate(request, token, cb)
+      await TokenAuth.validate(request, token, reply)
     })
 
-    validateTest.test('pass with account if one token can be verified', test => {
+    validateTest.test('pass with account if one token can be verified', async test => {
       const name = 'some-name'
       const token = 'token'
       const dfspId = 3
       const dfsp = { dfspId }
-
       DfspService.getByName.withArgs(name).returns(P.resolve(dfsp))
-
       const tokens = [
         { token: 'bad-token1' },
         { token: 'bad-token2' },
         { token }
       ]
-
       Crypto.verify.returns(P.resolve(false))
       Crypto.verify.withArgs(token).returns(P.resolve(true))
-
       TokenService.byDfsp.withArgs(dfsp).returns(P.resolve(tokens))
-
       const request = createRequest(name)
 
-      const cb = (err, isValid, credentials) => {
-        test.notOk(err)
-        test.equal(isValid, true)
-        test.equal(credentials, dfsp)
-        test.end()
+      const reply = {
+        response: (response) => {
+          test.equal(response.isValid, true)
+          test.equal(response.credentials, dfsp)
+          test.end()
+        }
       }
-
-      TokenAuth.validate(request, token, cb)
+      await TokenAuth.validate(request, token, reply)
     })
 
-    validateTest.test('be invalid if a token has expired', test => {
+    validateTest.test('be invalid if a token has expired', async test => {
       const name = 'some-name'
       const tokenVal = 'token'
-
       const now = Moment()
       const expiration = now.valueOf() - 5000
       Moment.utc.returns(now)
-
       const token = { token: tokenVal, expiration }
       const bearer = 'bearer'
       const dfspId = 2
       const dfsp = { dfspId }
-
       DfspService.getByName.withArgs(name).returns(P.resolve(dfsp))
-
       const tokens = [
         token
       ]
-
       Crypto.verify.returns(P.resolve(false))
       Crypto.verify.withArgs(token.token, bearer).returns(P.resolve(true))
-
       TokenService.byDfsp.withArgs(dfsp).returns(P.resolve(tokens))
-
       const request = createRequest(name)
 
-      const cb = (err, isValid, credentials) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.equal(credentials, dfsp)
-        test.end()
+      const reply = {
+        response: (response) => {
+          test.equal(response.isValid, false)
+          test.equal(response.credentials, dfsp)
+          test.end()
+        }
       }
-
-      TokenAuth.validate(request, bearer, cb)
+      await TokenAuth.validate(request, token, reply)
     })
 
     validateTest.end()

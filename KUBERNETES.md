@@ -22,17 +22,17 @@
     `helm init` <-- this only needs to be done once
 
 8. Deploy Ingress
-    `minikube addon enable ingress`
+    `minikube addons enable ingress`
 
 9. Configure PostgreSQL
-    Edit `postgresUser` & `postgresPassword` as desired in the following file `./deploy/helm/central-directory-helm-postgresql-values.yaml` 
+    Edit `postgresUser` & `postgresPassword` as desired in the following file `./deploy/helm/central-directory-helm-postgresql-values.yaml`
 
 10. Deploy PosgreSQL
     `helm install --name central-directory -f ./deploy/helm/central-directory-helm-postgresql-values.yaml stable/postgresql`
 
 11. Configure credentials in the Central-directory-secret
-    Edit `db.uri` with the details from step 10 above in the following file `./deploy/k8s/central-directory-secret.yaml`. 
-    
+    Edit `db.uri` with the details from step 10 above in the following file `./deploy/k8s/central-directory-secret.yaml`.
+
     Ensure the values are base64 encoded.
 
 12. Deploy Central-directory

@@ -10,7 +10,7 @@ module.exports = [
     method: 'GET',
     path: '/auth_token',
     handler: Handler.create,
-    config: {
+    options: {
       tags,
       auth: DfspAuthStrategy.name,
       description: 'Get a token that can be used to authenticate future requests',
