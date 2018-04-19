@@ -50,6 +50,20 @@ fpsql() {
 		"$@"
 }
 
+ftest() {
+	docker run --rm -i \
+    --link $POSTGRES_HOST \
+    --env POSTGRES_USER="$POSTGRES_USER" \
+    --env POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+    --env POSTGRES_HOST="$POSTGRES_HOST" \
+    --env POSTGRES_PORT="$POSTGRES_PORT" \
+    --env POSTGRES_DB="$POSTGRES_DB" \
+		"$DOCKER_IMAGE:$DOCKER_TAG" \
+    /bin/sh \
+    -c \
+    "$@"
+}
+
 is_psql_up() {
     fpsql -c '\l' > /dev/null 2>&1
 }
@@ -59,6 +73,7 @@ stop_docker() {
   (docker stop $POSTGRES_HOST && docker rm $POSTGRES_HOST) > /dev/null 2>&1
   >&2 echo "$APP_HOST environment is shutting down"
   (docker stop $APP_HOST && docker rm $APP_HOST) > /dev/null 2>&1
+  (docker stop $APP_TEST_HOST && docker rm $APP_TEST_HOST) > /dev/null 2>&1
 }
 
 clean_docker() {
@@ -67,29 +82,46 @@ clean_docker() {
   (docker rmi $DOCKER_IMAGE:$DOCKER_TAG) > /dev/null 2>&1
 }
 
+fcurl() {
+	docker run --rm -i \
+		--link $APP_HOST \
+		--entrypoint curl \
+		"jlekie/curl:latest" \
+        --output /dev/null --silent --head --fail \
+		"$@"
+}
+
+is_api_up() {
+    fcurl "http://$APP_HOST:$APP_PORT/health?"
+}
+
+start_central_directory()
+{
+ docker run -d -i \
+   --link $POSTGRES_HOST \
+   --name $APP_HOST \
+   --env POSTGRES_USER="$POSTGRES_USER" \
+   --env POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+   --env POSTGRES_HOST="$POSTGRES_HOST" \
+   --env POSTGRES_PORT="$POSTGRES_PORT" \
+   --env POSTGRES_DB="$POSTGRES_DB" \
+   -p $APP_PORT:$APP_PORT \
+   $DOCKER_IMAGE:$DOCKER_TAG \
+   /bin/sh \
+   -c "source test/.env; $APP_CMD"
+}
+
 run_test_command()
 {
-  >&2 echo "Running $APP_HOST Test command: $TEST_CMD"
-  docker run -i \
-    --link $POSTGRES_HOST \
-    --name $APP_HOST \
-    --env POSTGRES_USER="$POSTGRES_USER" \
-    --env POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-    --env POSTGRES_HOST="$POSTGRES_HOST" \
-    --env POSTGRES_PORT="$POSTGRES_PORT" \
-    --env POSTGRES_DB="$POSTGRES_DB" \
-    --env CDIR_ADMIN_KEY:"admin" \
-    --env CDIR_ADMIN_SECRET:"admin" \
-    --env CDIR_DATABASE_URI:"postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB" \
-    --env CDIR_DEFAULT_DFSP:"dfspA" \
-    --env CDIR_END_USER_REGISTRY_URL:"http://end-user-registry" \
-    --env CDIR_SCHEME_ID:"001" \
-    --env CDIR_ENABLE_TOKEN_AUTH:"false" \
-    --env CDIR_TOKEN_EXPIRATION:"3600000" \
-    -p 3000:3000 \
-		$DOCKER_IMAGE:$DOCKER_TAG \
-    /bin/sh \
-    -c "source test/.env; $TEST_CMD"
+ >&2 echo "Running $APP_HOST Test command: $TEST_CMD"
+ docker run -i \
+   --link $APP_HOST \
+   --name $APP_TEST_HOST \
+   --env HOST_IP="$APP_HOST" \
+   --env CDIR_DATABASE_URI="postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB" \
+   $DOCKER_IMAGE:$DOCKER_TAG \
+   /bin/sh \
+   -c "source test/.env; $TEST_CMD"
 }
 
 >&2 echo "Building Docker Image $DOCKER_IMAGE:$DOCKER_TAG with $DOCKER_FILE"
@@ -102,8 +134,8 @@ then
   exit 1
 fi
 
->&2 echo "Postgres is starting"
 stop_docker
+>&2 echo "Postgres is starting"
 docker run --name $POSTGRES_HOST -d -p $POSTGRES_PORT:$POSTGRES_PORT -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER -e POSTGRES_DB=$POSTGRES_DB "$POSTGRES_IMAGE:$POSTGRES_TAG" > /dev/null 2>&1
 
 if [ "$?" != 0 ]
@@ -118,22 +150,39 @@ until is_psql_up; do
   sleep 1
 done
 
->&2 echo "Functional tests are starting"
+>&2 echo "Running migrations"
+ftest "source test/.env; npm run migrate"
+
+if [ "$?" != 0 ]
+then
+  >&2 echo "Migration failed...exiting"
+  clean_docker
+  exit 1
+fi
+
+>&2 echo "Starting central directory"
+start_central_directory
+
+>&2 printf "Starting up..."
+until is_api_up; do
+  >&2 printf "."
+  sleep 5
+done
+
 run_test_command
 test_exit_code=$?
+
+>&2 echo "Displaying test logs"
+docker logs $APP_TEST_HOST
+
+>&2 echo "Copy results to local directory"
+docker cp $APP_TEST_HOST:$DOCKER_WORKING_DIR/$APP_DIR_TEST_RESULTS test
 
 if [ "$test_exit_code" != 0 ]
 then
   >&2 echo "Functional tests failed...exiting"
   >&2 echo "Test environment logs..."
-  docker logs $APP_HOST
-  # clean_docker
-  exit 1
 fi
 
->&2 echo "Copy results to local directory"
-docker cp $APP_HOST:$DOCKER_WORKING_DIR/$APP_DIR_TEST_RESULTS test
-
-# clean_docker
-
+clean_docker
 exit "$test_exit_code"

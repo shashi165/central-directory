@@ -11,9 +11,9 @@ COPY test /opt/central-directory/test
 RUN chmod +x /opt/central-directory/server.sh && \
     apk --no-cache add git
 RUN apk add --no-cache make gcc g++ python libtool autoconf automake && \
+    cd $(npm root -g)/npm && \
     apk add -U iproute2 && ln -s /usr/lib/tc /lib/tc && \
     apk add -U iptables && \
-    cd $(npm root -g)/npm && \
     npm install -g node-gyp
 
 RUN npm install -g tape tapes tap-xunit
