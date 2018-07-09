@@ -38,33 +38,34 @@ const retrieveDefaultDfsp = () => {
   return DfspService.getDefaultDfsp().then(d => [dfspResponse({ dfsp: d, primary: true, registered: false })])
 }
 
-exports.get = (request, reply) => {
-  performValidation(request.query.identifier)
-    .then(({ directory, identifier, identifierType }) => {
-      return new P((resolve, reject) => {
-        directory.find(identifier, (err, result) => {
-          if (err) {
-            return (err instanceof NotFoundError) ? resolve(retrieveDefaultDfsp()) : reject(err)
-          } else {
-            let invalidSchemeId = result.find(f => f.schemeIdentifier !== Config.SCHEME_ID)
-            if (invalidSchemeId) {
-              return reject(new NotFoundError('Cross-scheme lookups are not currently supported'))
-            }
+exports.get = async (request, reply) => {
+  const o = await performValidation(request.query.identifier)
+  const directory = o.directory
+  const identifier = o.identifier
 
-            return P.all(result.map(r => DfspService.getByDfspSchemeIdentifier(r.dfspSchemeIdentifier)
-              .then(dfsp => {
-                return { dfsp, primary: r.primary }
-              }
-            )))
-            .then(dfsps => {
-              // Get rid of any DFSPs that can't be found but have a matching SCHEME_ID. This could be due to deleted records. or by sharing test data.
-              let filteredDfsps = dfsps.filter(d => d.dfsp !== null)
-              resolve(filteredDfsps.map(d => dfspResponse(d)))
-            })
-          }
-        })
-      })
+  return new P((resolve, reject) => {
+    directory.find(identifier, (err, result) => {
+      if (err) {
+        return (err instanceof NotFoundError) ? resolve(retrieveDefaultDfsp()) : reject(err)
+      } else {
+        let invalidSchemeId = result.find(f => f.schemeIdentifier !== Config.SCHEME_ID)
+        if (invalidSchemeId) {
+          return reject(new NotFoundError('Cross-scheme lookups are not currently supported'))
+        }
+
+        return P.all(result.map(r => DfspService.getByDfspSchemeIdentifier(r.dfspSchemeIdentifier)
+          .then(dfsp => {
+            return { dfsp, primary: r.primary }
+          })
+        ))
+          .then(dfsps => {
+            // Get rid of any DFSPs that can't be found but have a matching SCHEME_ID. This could be due to deleted records. or by sharing test data.
+            let filteredDfsps = dfsps.filter(d => d.dfsp !== null)
+            resolve(filteredDfsps.map(d => dfspResponse(d)))
+          })
+      }
     })
+  })
     .then(reply)
     .catch(reply)
 }

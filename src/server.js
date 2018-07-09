@@ -17,4 +17,3 @@ module.exports = Migrator.migrate()
     Logger.error(err)
     throw err
   })
-

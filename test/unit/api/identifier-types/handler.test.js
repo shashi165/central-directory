@@ -21,28 +21,25 @@ Test('Handler test', typesTest => {
   })
 
   typesTest.test('identifierTypes should', identifierTypesTest => {
-    identifierTypesTest.test('reformat and return registered types', test => {
+    identifierTypesTest.test('reformat and return registered types', async function (test) {
       let types = [{ identifierType: 'test type', description: 'type description' }]
       Registry.identifierTypes.returns(P.resolve(types))
-      let reply = (result) => {
-        test.equal(result.length, 1)
-        test.equal(result[0]['identifierType'], 'test type')
-        test.equal(result[0].description, 'type description')
-        test.end()
-      }
-
-      Handler.identifierTypes({}, reply)
+      const result = await Handler.identifierTypes({}, {})
+      test.equal(result.length, 1)
+      test.equal(result[0]['identifierType'], 'test type')
+      test.equal(result[0].description, 'type description')
+      test.end()
     })
 
-    identifierTypesTest.test('reply with error if registered types fails', test => {
+    identifierTypesTest.test('reply with error if registered types fails', async function (test) {
       const error = new Error()
       Registry.identifierTypes.returns(P.reject(error))
-      let reply = (e) => {
+      try {
+        await Handler.identifierTypes({}, {})
+      } catch (e) {
         test.equal(e, error)
         test.end()
       }
-
-      Handler.identifierTypes({}, reply)
     })
 
     identifierTypesTest.end()

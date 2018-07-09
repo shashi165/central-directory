@@ -5,11 +5,10 @@ const Hapi = require('hapi')
 function setup () {
   const fixtures = {}
 
-  const server = new Hapi.Server()
-  server.connection({port: 8000})
+  const server = new Hapi.Server({port: 8000})
 
   server.register({
-    register: require('../../src/api')
+    plugin: require('../../src/api')
   })
 
   fixtures.server = server

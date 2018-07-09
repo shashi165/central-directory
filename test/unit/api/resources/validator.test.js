@@ -3,7 +3,6 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const InvalidQueryParameterError = require('@mojaloop/central-services-error-handling').InvalidQueryParameterError
 const Registry = require('../../../../src/domain/directory/registry')
 const Validator = require('../../../../src/api/resources/validator')
 
@@ -22,34 +21,29 @@ Test('resource validator', validatorTest => {
   })
 
   validatorTest.test('get should', getTest => {
-    getTest.test('reject with InvalidQueryParameterError if identifierType is not registered', test => {
+    getTest.test('reject with InvalidQueryParameterError if identifierType is not registered', async test => {
       let identifierType = 'test'
       let query = { identifierType: identifierType, identifier: 'test' }
 
-      Registry.byIdentifierType.withArgs(identifierType).returns(P.resolve(null))
-      Validator.get(query)
-        .then(() => {
-          test.fail('Expected InvalidQueryParameterError')
-          test.end()
-        })
-        .catch(InvalidQueryParameterError, e => {
-          test.equal(e.message, 'Error validating one or more query parameters')
-          test.deepEqual(e.payload.validationErrors, [{
-            message: '\'test\' is not a registered identifierType',
-            params: {
-              key: 'identifierType',
-              value: identifierType
-            }
-          }])
-          test.end()
-        })
-        .catch(e => {
-          test.fail('Expected InvalidQueryParameterError')
-          test.end()
-        })
+      try {
+        await Validator.get(query)
+        test.fail('Expected InvalidQueryParameterError')
+        test.end()
+      } catch (err) {
+        test.equal(err.name, 'InvalidQueryParameterError')
+        test.equal(err.payload.message, 'Error validating one or more query parameters')
+        test.deepEqual(err.payload.validationErrors, [{
+          message: '\'test\' is not a registered identifierType',
+          params: {
+            key: 'identifierType',
+            value: identifierType
+          }
+        }])
+        test.end()
+      }
     })
 
-    getTest.test('reject with InvalidQueryParameterError if identifier is not valid format for directory', test => {
+    getTest.test('reject with InvalidQueryParameterError if identifier is not valid format for directory', async test => {
       let identifier = 'test_id'
       let identifierType = 'test_type'
       let query = { identifierType: identifierType, identifier: identifier }
@@ -59,30 +53,25 @@ Test('resource validator', validatorTest => {
       }
 
       Registry.byIdentifierType.withArgs(identifierType).returns(P.resolve(directory))
-
-      Validator.get(query)
-        .then(() => {
-          test.fail('Expected InvalidQueryParameterError')
-          test.end()
-        })
-        .catch(InvalidQueryParameterError, e => {
-          test.equal(e.message, 'Error validating one or more query parameters')
-          test.deepEqual(e.payload.validationErrors, [{
-            message: '\'test_id\' is not a valid identifier for identifierType \'test_type\'',
-            params: {
-              key: 'identifier',
-              value: identifier
-            }
-          }])
-          test.end()
-        })
-        .catch(e => {
-          test.fail('Expected InvalidQueryParameterError')
-          test.end()
-        })
+      try {
+        await Validator.get(query)
+        test.fail('Expected InvalidQueryParameterError')
+        test.end()
+      } catch (err) {
+        test.equal(err.name, 'InvalidQueryParameterError')
+        test.equal(err.payload.message, 'Error validating one or more query parameters')
+        test.deepEqual(err.payload.validationErrors, [{
+          message: '\'test_id\' is not a valid identifier for identifierType \'test_type\'',
+          params: {
+            key: 'identifier',
+            value: identifier
+          }
+        }])
+        test.end()
+      }
     })
 
-    getTest.test('resolve identifierType, identifier and directory from query parameters', test => {
+    getTest.test('resolve identifierType, identifier and directory from query parameters', async test => {
       let identifierType = 'test'
       let identifier = 'test identifier'
       let directory = {
@@ -91,13 +80,11 @@ Test('resource validator', validatorTest => {
       Registry.byIdentifierType.returns(P.resolve(directory))
       let query = { identifierType: identifierType, identifier: identifier }
 
-      Validator.get(query)
-        .then(result => {
-          test.equal(result.identifierType, identifierType)
-          test.equal(result.identifier, identifier)
-          test.equal(result.directory, directory)
-          test.end()
-        })
+      const result = await Validator.get(query)
+      test.equal(result.identifierType, identifierType)
+      test.equal(result.identifier, identifier)
+      test.equal(result.directory, directory)
+      test.end()
     })
 
     getTest.end()

@@ -44,4 +44,3 @@ module.exports = {
   hash,
   verify
 }
-

@@ -4,8 +4,10 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Config = require('../../../../src/lib/config')
 const AdminAuth = require('../../../../src/api/auth/admin')
+// const Logger = require('@mojaloop/central-services-shared').Logger
 
 const request = {}
+const h = {}
 
 Test('admin auth', authTest => {
   let sandbox
@@ -36,8 +38,8 @@ Test('admin auth', authTest => {
   })
 
   authTest.test('name should', nameTest => {
-    nameTest.test('be "admin"', test => {
-      test.equal(AdminAuth.name, 'admin')
+    nameTest.test('be "simple"', test => {
+      test.equal(AdminAuth.name, 'simple')
       test.end()
     })
     nameTest.end()
@@ -52,35 +54,23 @@ Test('admin auth', authTest => {
   })
 
   authTest.test('validate should', validateTest => {
-    validateTest.test('return invalid if username is not configured admin key', test => {
-      let callback = (err, isValid) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.end()
-      }
-
-      AdminAuth.validate(request, 'notadmin', adminSecret, callback)
+    validateTest.test('return invalid if username is not configured admin key', async test => {
+      const response = await AdminAuth.validate(request, '!adminKey', adminSecret, h)
+      test.equal(response.isValid, false)
+      test.end()
     })
 
-    validateTest.test('return invalid if password is not configured admin secret', test => {
-      let callback = (err, isValid) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.end()
-      }
-
-      AdminAuth.validate(request, adminKey, 'password', callback)
+    validateTest.test('return invalid if password is not configured admin secret', async test => {
+      const response = await AdminAuth.validate(request, adminKey, '!adminSecret', h)
+      test.equal(response.isValid, false)
+      test.end()
     })
 
-    validateTest.test('return valid if username and password are configured values', test => {
-      let callback = (err, isValid, credentials) => {
-        test.notOk(err)
-        test.equal(isValid, true)
-        test.equal(credentials.name, 'admin')
-        test.end()
-      }
-
-      AdminAuth.validate(request, adminKey, adminSecret, callback)
+    validateTest.test('return valid if username and password are configured values', async test => {
+      const response = await AdminAuth.validate(request, adminKey, adminSecret, h)
+      test.equal(response.isValid, true)
+      test.equal(response.credentials.name, 'admin')
+      test.end()
     })
 
     validateTest.end()

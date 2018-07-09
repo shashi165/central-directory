@@ -1,7 +1,6 @@
 deploy/
 coverage/
 node_modules/
-test/
 .dockerignore
 .editorconfig
 .env

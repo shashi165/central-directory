@@ -78,4 +78,3 @@ exports.byIdentifierType = (identifierType) => {
 }
 
 exports.identifierTypes = () => P.resolve(identifierTypes)
-

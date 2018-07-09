@@ -55,13 +55,15 @@ Test('commands handler', handlerTest => {
         secret: dfspName
       }
 
-      const reply = (result) => {
-        return {
-          code: statusCode => {
-            test.equal(statusCode, 201)
-            test.deepEqual(result, responseDfsp)
-            test.ok(Service.create.calledWith(dfspName, dfspShortName, dfspUrl))
-            test.end()
+      const reply = {
+        response: (result) => {
+          return {
+            code: statusCode => {
+              test.equal(statusCode, 201)
+              test.deepEqual(result, responseDfsp)
+              test.ok(Service.create.calledWith(dfspName, dfspShortName, dfspUrl))
+              test.end()
+            }
           }
         }
       }
@@ -69,7 +71,7 @@ Test('commands handler', handlerTest => {
       Handler.create(request, reply)
     })
 
-    createTest.test('reply with error if Service create returns error', test => {
+    createTest.test('reply with error if Service create returns error', async function (test) {
       const error = new Error()
       Service.create.returns(P.reject(error))
 
@@ -78,13 +80,12 @@ Test('commands handler', handlerTest => {
           name: 'dfspName'
         }
       }
-
-      const reply = (e) => {
+      try {
+        await Handler.create(request, {})
+      } catch (e) {
         test.equal(e, error)
         test.end()
       }
-
-      Handler.create(request, reply)
     })
 
     createTest.end()

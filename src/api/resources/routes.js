@@ -11,7 +11,7 @@ module.exports = [{
   method: 'GET',
   path: '/resources',
   handler: Handler.get,
-  config: {
+  options: {
     tags: tags,
     description: 'Look up user',
     id: 'resources',
@@ -27,7 +27,7 @@ module.exports = [{
   method: 'POST',
   path: '/resources',
   handler: Handler.registerIdentifier,
-  config: {
+  options: {
     tags: tags,
     description: 'Register identifier',
     id: 'register_identifier',

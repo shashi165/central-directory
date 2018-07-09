@@ -11,7 +11,7 @@ module.exports = [
     method: 'POST',
     path: '/commands/register',
     handler: Handler.create,
-    config: {
+    options: {
       tags: tags,
       auth: AdminAuthStrategy.name,
       validate: {

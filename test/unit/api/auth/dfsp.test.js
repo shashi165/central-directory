@@ -58,31 +58,23 @@ Test('dfsp auth', authTest => {
   })
 
   authTest.test('validate should', validateTest => {
-    validateTest.test('return invalid if dfsp does not exist', test => {
+    validateTest.test('return invalid if dfsp does not exist', async test => {
       DfspService.getByName.returns(P.resolve(null))
 
-      let callback = (err, isValid) => {
-        test.notOk(err)
-        test.equal(isValid, false)
-        test.end()
-      }
-
-      DfspAuth.validate(request, '', '', callback)
+      const response = await DfspAuth.validate(request, '', '', {})
+      test.equal(response.isValid, false)
+      test.end()
     })
 
-    validateTest.test('return true if user is configured admin', test => {
-      const cb = (err, isValid, credentials) => {
-        test.notOk(err)
-        test.equal(isValid, true)
-        test.equal(credentials.name, adminKey)
-        test.equal(DfspService.getByName.callCount, 0)
-        test.end()
-      }
-
-      DfspAuth.validate(request, adminKey, adminSecret, cb)
+    validateTest.test('return true if user is configured admin', async test => {
+      const response = await DfspAuth.validate(request, adminKey, adminSecret, {})
+      test.equal(response.isValid, true)
+      test.equal(response.credentials.name, adminKey)
+      test.equal(await DfspService.getByName.callCount, 0)
+      test.end()
     })
 
-    validateTest.test('return invalid if dfsp secret hash does not match password', test => {
+    validateTest.test('return invalid if dfsp secret hash does not match password', async test => {
       let password = 'password'
       let dfsp = {
         name: 'dfsp1',
@@ -92,17 +84,13 @@ Test('dfsp auth', authTest => {
       DfspService.getByName.withArgs(dfsp.name).returns(P.resolve(dfsp))
       Crypto.verify.withArgs(dfsp.secretHash, password).returns(P.resolve(false))
 
-      let callback = (err, isValid) => {
-        test.notOk(err)
-        test.ok(Crypto.verify.calledOnce)
-        test.equal(isValid, false)
-        test.end()
-      }
-
-      DfspAuth.validate(request, dfsp.name, password, callback)
+      const response = await DfspAuth.validate(request, dfsp.name, password, {})
+      test.ok(await Crypto.verify.calledOnce)
+      test.equal(response.isValid, false)
+      test.end()
     })
 
-    validateTest.test('return valid dfsp if secret hash matches password', test => {
+    validateTest.test('return valid dfsp if secret hash matches password', async test => {
       let password = 'password'
       let dfsp = {
         name: 'dfsp1',
@@ -113,15 +101,11 @@ Test('dfsp auth', authTest => {
       DfspService.getByName.withArgs(dfsp.name).returns(P.resolve(dfsp))
       Crypto.verify.withArgs(dfsp.secretHash, password).returns(P.resolve(true))
 
-      let callback = (err, isValid, credentials) => {
-        test.notOk(err)
-        test.ok(Crypto.verify.calledOnce)
-        test.equal(isValid, true)
-        test.deepEqual(credentials, dfsp)
-        test.end()
-      }
-
-      DfspAuth.validate(request, dfsp.name, password, callback)
+      const response = await DfspAuth.validate(request, dfsp.name, password, {})
+      test.ok(await Crypto.verify.calledOnce)
+      test.equal(response.isValid, true)
+      test.deepEqual(response.credentials, dfsp)
+      test.end()
     })
 
     validateTest.end()
@@ -129,4 +113,3 @@ Test('dfsp auth', authTest => {
 
   authTest.end()
 })
-

@@ -9,7 +9,7 @@ const Registry = require('../../../../src/domain/directory/registry')
 
 Test('Directories module', moduleTest => {
   moduleTest.test('register should', registerTest => {
-    registerTest.test('register directories with identifier and descriptions', test => {
+    registerTest.test('register directories with identifier and descriptions', async function (test) {
       let file1Name = 'test.js'
       let file1Object = { identifierType: 't', description: 't', '@noCallThru': true }
       let file2Name = 'test2.js'
@@ -32,15 +32,12 @@ Test('Directories module', moduleTest => {
       }
 
       let Module = Proxyquire('../../../../src/domain/directory', stubs)
-      test.equal(Module.register.attributes.name, 'directory-registration')
+      test.equal(Module.plugin.name, 'directory-registration')
 
-      let next = () => {
-        test.ok(Registry.register.apply.calledOnce)
-        test.deepEqual(Registry.register.apply.firstCall.args[1], [file1Object, file2Object])
-        test.end()
-      }
-
-      Module.register({}, {}, next)
+      Module.plugin.register({}, {})
+      test.ok(Registry.register.apply.calledOnce)
+      test.deepEqual(Registry.register.apply.firstCall.args[1], [file1Object, file2Object])
+      test.end()
     })
 
     registerTest.end()
