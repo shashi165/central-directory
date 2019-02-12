@@ -13,7 +13,7 @@ RUN apk add --no-cache make gcc g++ python libtool autoconf automake && \
     npm install -g node-gyp && \
     chmod +x /opt/central-directory/server.sh
     
-RUN npm install -g sodium@2.0.3 --unsafe-perm && \
+RUN npm install -g sodium@3.0.2 --unsafe-perm && \
     npm install --production
 
 EXPOSE 3000
