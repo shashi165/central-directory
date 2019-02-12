@@ -9,7 +9,7 @@ const identifierTypes = []
 
 const resolveDirectory = (config) => {
   return P.resolve(TypeCheck.isFunction(config) ? config() : config)
-    .then(({identifierType, description, find, registerIdentifier, format}) => {
+    .then(({ identifierType, description, find, registerIdentifier, format }) => {
       if (!identifierType) {
         throw new InvalidDirectoryError('Directory does not implement required property \'identifierType\'')
       }

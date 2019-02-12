@@ -30,11 +30,11 @@ const validate = async (request, token, h) => {
 
   const results = await TokenService.byDfsp(dfsp)
   if (!results || results.length === 0) {
-    return h.response({isValid: false, credentials: null})
+    return h.response({ isValid: false, credentials: null })
   }
   const result = await P.all(results.map(x => validateToken(x, token)))
     .then(verifications => verifications.some(x => x))
-    .then(verified => h.response({isValid: verified, credentials: dfsp}))
+    .then(verified => h.response({ isValid: verified, credentials: dfsp }))
   return result
 }
 

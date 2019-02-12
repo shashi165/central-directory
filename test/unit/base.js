@@ -5,7 +5,7 @@ const Hapi = require('hapi')
 function setup () {
   const fixtures = {}
 
-  const server = new Hapi.Server({port: 8000})
+  const server = new Hapi.Server({ port: 8000 })
 
   server.register({
     plugin: require('../../src/api')

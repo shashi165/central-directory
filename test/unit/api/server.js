@@ -31,8 +31,8 @@ async function setup () {
 
   sandbox.stub(DfspStrategy, 'validate')
   sandbox.stub(TokenStrategy, 'validate')
-  DfspStrategy.validate.resolves({isValid: true, credentials: {}})
-  TokenStrategy.validate.resolves({isValid: true, credentials: {}})
+  DfspStrategy.validate.resolves({ isValid: true, credentials: {} })
+  TokenStrategy.validate.resolves({ isValid: true, credentials: {} })
 
   await server.register([
     ErrorHandling,
@@ -48,7 +48,7 @@ async function setup () {
   return fixtures
 }
 
-let request = ({url, method = 'GET', payload = '', headers = {}}) => {
+let request = ({ url, method = 'GET', payload = '', headers = {} }) => {
   return { url: url, method: method, payload: payload, headers: headers }
 }
 

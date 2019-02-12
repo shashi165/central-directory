@@ -10,11 +10,11 @@ const Registry = require('../../../../src/domain/directory/registry')
 Test('Directories module', moduleTest => {
   moduleTest.test('register should', registerTest => {
     registerTest.test('register directories with identifier and descriptions', async function (test) {
-      let file1Name = 'test.js'
+      let file1Name = '../../../test/unit/domain/directory/test.js'
       let file1Object = { identifierType: 't', description: 't', '@noCallThru': true }
-      let file2Name = 'test2.js'
+      let file2Name = '../../../test/unit/domain/directory/test2.js'
       let file2Object = { identifierType: 't2', description: 't2', '@noCallThru': true }
-      let file3Name = 'test3.js'
+      let file3Name = '../../../test/unit/domain/directory/test3.js'
       let file3Object = { '@noCallThru': true }
 
       Sinon.stub(Glob, 'sync')
@@ -26,9 +26,9 @@ Test('Directories module', moduleTest => {
       let stubs = {
         'glob': Glob,
         './registry': Registry,
-        './test.js': file1Object,
-        './test2.js': file2Object,
-        './test3.js': file3Object
+        '../../../test/unit/domain/directory/test.js': file1Object,
+        '../../../test/unit/domain/directory/test2.js': file2Object,
+        '../../../test/unit/domain/directory/test3.js': file3Object
       }
 
       let Module = Proxyquire('../../../../src/domain/directory', stubs)
